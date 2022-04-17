@@ -107,7 +107,7 @@
                DELIMITED BY SIZE INTO W-VISTA
            END-STRING
            STRING
-               "CREATE VIEW " FUNCTION TRIM(W-VISTA)
+               "CREATE OR REPLACE VIEW " FUNCTION TRIM(W-VISTA)
                " AS (" FUNCTION TRIM(W-CONSULTA)
                " ) "
                DELIMITED BY SIZE INTO W-EXECSQL
