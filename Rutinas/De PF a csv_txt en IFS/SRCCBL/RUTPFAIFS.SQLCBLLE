@@ -131,7 +131,7 @@
       *----------------------------------------------------------------
            STRING
                FUNCTION TRIM(W-RUTA-IFS)
-               FUNCTION TRIM(LK-USER)
+               FUNCTION TRIM(LK-USER) "/"
                FUNCTION TRIM(W-ARCHIVO-IFS)
                DELIMITED BY SIZE INTO W-RUTA-IFS
            END-STRING
