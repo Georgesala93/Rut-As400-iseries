@@ -39,12 +39,18 @@
        01 W-ALFA                          PIC  X(100)    VALUE SPACES.
        01 W-NUMER                         PIC  9(017)    VALUE ZEROES.
        01 W-DECIMAL                       PIC  9(015)V99 VALUE ZEROES.
+       01 SQL-CAMPO04                     PIC S9(015)    VALUE ZEROES.
+       01 W-STRSQL                        PIC  X(2000)   VALUE SPACES.
+       01 W-WHESQL                        PIC  X(2000)   VALUE SPACES.
+       01 W-ORDSQL                        PIC  X(2000)   VALUE SPACES.
+       01 W-NOMLIB                        PIC  X(010)    VALUE SPACES.
+       01 W-NOMARC                        PIC  X(010)    VALUE SPACES.
       *
       *----------------------------------------------------------------
       *                        Data Access
       *----------------------------------------------------------------
-      *01  xxxxxxxx-REC.
-      *    COPY DDS-REGxxxxxx  OF xxxxxxxx.
+       01  TABLA-REC.
+          COPY DDS-REGTABLA  OF TABLA.
       *----------------------------------------------------------------
        LINKAGE SECTION.
       *----------------------------------------------------------------
@@ -158,10 +164,10 @@
       *----------------------------------------------------------------
        READ-CURSOR.
       *----------------------------------------------------------------
-           INITIALIZE W-REGISTRO
+           INITIALIZE REGTABLA OF TABLA-REC
 
            EXEC SQL
-             FETCH NEXT FROM CURONE INTO :W-REGISTRO
+             FETCH NEXT FROM CURONE INTO :REGTABLA
            END-EXEC
            CONTINUE.
       *----------------------------------------------------------------
