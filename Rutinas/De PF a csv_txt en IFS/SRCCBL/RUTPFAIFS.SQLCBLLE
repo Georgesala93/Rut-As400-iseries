@@ -36,34 +36,26 @@
              INCLUDE SQLCA
            END-EXEC.
       *
-       01 W-ALFA                          PIC  X(100)    VALUE SPACES.
-       01 W-NUMER                         PIC  9(017)    VALUE ZEROES.
-       01 W-DECIMAL                       PIC  9(015)V99 VALUE ZEROES.
-       01 SQL-CAMPO04                     PIC S9(015)    VALUE ZEROES.
-       01 W-STRSQL                        PIC  X(2000)   VALUE SPACES.
-       01 W-WHESQL                        PIC  X(2000)   VALUE SPACES.
-       01 W-ORDSQL                        PIC  X(2000)   VALUE SPACES.
-       01 W-NOMLIB                        PIC  X(010)    VALUE SPACES.
-       01 W-NOMARC                        PIC  X(010)    VALUE SPACES.
+       01 W-RUTA-IFS                      PIC  X(200)    VALUE SPACES.
+       01 W-ARCHIVO-IFS                   PIC  X(20)     VALUE SPACES.
+       01 W-VISTA                         PIC  X(20)     VALUE SPACES.
+       01 W-CONSULTA                      PIC  X(2000)   VALUE SPACES.
+       01 W-EXECSQL                       PIC  X(2000)   VALUE SPACES.
+       01 W-COMANDOCL                     PIC  X(0500)   VALUE SPACES.
+       01 W-ESTADO                        PIC  9(01)     VALUE ZEROES.
       *
       *----------------------------------------------------------------
       *                        Data Access
       *----------------------------------------------------------------
-       01  TABLA-REC.
-          COPY DDS-REGTABLA  OF TABLA.
+      *01  xxxxxxxx-REC.
+      *    COPY DDS-REGxxxxxx  OF xxxxxxxx.
       *----------------------------------------------------------------
        LINKAGE SECTION.
       *----------------------------------------------------------------
-       01 LK-xxxxxx       PIC S9(003).
-       01 LK-xxxxx        PIC S9(017).
-       01 LK-xxxx         PIC S9(001).
-       01 LK-xxx          PIC  X(100).
+       01 LK-USER       PIC S9(003).
       *
       *----------------------------------------------------------------
-       PROCEDURE DIVISION USING LK-xxxxxx
-                                LK-xxxxx
-                                LK-xxxx
-                                LK-xxx
+       PROCEDURE DIVISION USING LK-USER
                                 .
       *----------------------------------------------------------------
        INICIAR-PROGRAMA.
@@ -87,6 +79,9 @@
       *----------------------------------------------------------------
        INICIALIZAR.
       *----------------------------------------------------------------
+           INITIALIZE W-COMANDOCL W-CONSULTA W-ESTADO W-RUTA-IFS
+                    W-ARCHIVO-IFS W-EXECSQL
+           MOVE "/home/"        TO W-RUTA-IFS
            CONTINUE
            .
       *----------------------------------------------------------------
@@ -95,94 +90,81 @@
       *----------------------------------------------------------------
        PROCESAR.
       *----------------------------------------------------------------
-           PERFORM READ-TABLA
-           PERFORM CURSOR-SQL
+           PERFORM SOLICITA-INF
+           PERFORM CREA-VISTA
+           IF ( SQLCODE EQUAL ZEROES )
+               PERFORM ARMA-COMANDO
+               PERFORM EJECUTA-COMANDO
+               PERFORM ELIMINA-VISTA
+           END-IF
            CONTINUE
            .
       *----------------------------------------------------------------
-       READ-TABLA.
+       CREA-VISTA.
       *----------------------------------------------------------------
-           EXEC SQL
-             SELECT CAMPO1
-               INTO :SQL-CAMPO1
-               FROM TABLA
-              WHERE CAMPO4 = :SQL-CAMPO04
-           END-EXEC
-           .
-      *----------------------------------------------------------------
-       CURSOR-SQL.
-      *----------------------------------------------------------------
-           PERFORM DECLARE-CURSOR
-           PERFORM OPEN-CURSOR
-           PERFORM READ-CURSOR
-           PERFORM UNTIL ( SQLCODE NOT EQUAL ZEROES )
-      *      LOGICA DE NEGOCIO
-             PERFORM READ-CURSOR
-           END-PERFORM
-           PERFORM CLOSE-CURSOR
-           .
-      *----------------------------------------------------------------
-       DECLARE-CURSOR.
-      *----------------------------------------------------------------
-      *----ESTATICO
-           EXEC SQL
-                DECLARE CURONE SCROLL CURSOR FOR
-                 SELECT CAMPO1, CAMPO2, CAMPO3
-                  FROM TABLA
-                   GROUP BY CODPRO
-                   ORDER BY CODPRO
-           END-EXEC
-      *----DINAMICO
-           PERFORM CREATE-SQL-STM
-           EXEC SQL
-             PREPARE STM1 FROM :W-STRSQL
-           END-EXEC
-           EXEC SQL
-             DECLARE CURONE CURSOR FOR STM1
-           END-EXEC
-           .
-      *----------------------------------------------------------------
-       CREATE-SQL-STM.
-      *----------------------------------------------------------------
-           INITIALIZE  W-STRSQL W-WHESQL W-ORDSQL
-
            STRING
-             "SELECT * FROM "
-             FUNCTION TRIM(W-NOMLIB)
-             "/"
-             FUNCTION TRIM(W-NOMARC)
-             DELIMITED BY SIZE INTO W-STRSQL
+               "QTEMP/" LK-USER
+               DELIMITED BY SIZE INTO W-VISTA
            END-STRING
-           .
-      *----------------------------------------------------------------
-       OPEN-CURSOR.
-      *----------------------------------------------------------------
-           EXEC SQL
-             OPEN CURONE
-           END-EXEC
-           CONTINUE.
-      *----------------------------------------------------------------
-       READ-CURSOR.
-      *----------------------------------------------------------------
-           INITIALIZE REGTABLA OF TABLA-REC
+           STRING
+               "CREATE VIEW " FUNCTION TRIM(W-VISTA)
+               " AS (" FUNCTION TRIM(W-CONSULTA)
+               " ) "
+               DELIMITED BY SIZE INTO W-EXECSQL
+           END-STRING
 
            EXEC SQL
-             FETCH NEXT FROM CURONE INTO :REGTABLA
-           END-EXEC
-           CONTINUE.
+               EXECUTE IMMEDIATE :W-EXECSQL
+           END-EXEC.
+           .
       *----------------------------------------------------------------
-       CLOSE-CURSOR.
+       SOLICITA-INF.
       *----------------------------------------------------------------
-           EXEC SQL
-             CLOSE CURONE
-           END-EXEC
-           CONTINUE.
+           DISPLAY "DIGITE NOMBRE DEL ARCHIVO DE SALIDA CON EXTENCION"
+           ACCEPT W-ARCHIVO-IFS
+
+           DISPLAY "DIGITE CONSULTA"
+           ACCEPT W-CONSULTA
+           .
+      *----------------------------------------------------------------
+       ARMA-COMANDO.
+      *----------------------------------------------------------------
+           STRING
+               FUNCTION TRIM(W-RUTA-IFS)
+               FUNCTION TRIM(LK-USER)
+               FUNCTION TRIM(W-ARCHIVO-IFS)
+               DELIMITED BY SIZE INTO W-RUTA-IFS
+           END-STRING
+
+           STRING "CPYTOIMPF FROMFILE("
+               FUNCTION TRIM(W-VISTA)") "
+               "TOSTMF('" FUNCTION TRIM(W-RUTA-IFS) "') "
+               "MBROPT(*REPLACE) "
+               "STMFCCSID(*PCASCII) RCDDLM(*CRLF) RMVBLANK(*BOTH) "
+               "FLDDLM(';') "
+               "DECPNT(*COMMA) "
+               "ADDCOLNAM(*SQL)"
+               DELIMITED BY SIZE INTO W-COMANDOCL
+           END-STRING
+           CONTINUE
+           .
+      *----------------------------------------------------------------
+       EJECUTA-COMANDO.
+      *----------------------------------------------------------------
+           CALL "EXECMD" USING W-COMANDOCL W-ESTADO
+           END-CALL
+           IF ( W-ESTADO NOT EQUAL ZEROES )
+               DISPLAY "ERROR AL GENERAR EL ARCHIVO"
+           ELSE
+               DISPLAY "EL ARCHIVO SE GENERO EN LA RUTA: " W-RUTA-IFS
+           END-IF
+           CONTINUE
+           .
       *----------------------------------------------------------------
       * Procedimiento : Finalizar.                                    |
       * Descripción   : Se cierran los archivos utilizados.           |
       *----------------------------------------------------------------
        FINALIZAR.
       *----------------------------------------------------------------
-      *    CLOSE xxxxxxxxx
            CONTINUE
            .
