@@ -14,3 +14,9 @@ Esta Rutina funsiona para que apartir de una sentencia sql se genere un archivo 
 - **EXECMD     :** Este pgm esta echo en RPG cumple con la funcionalidad de ejecutar comandos CL, este pgm es llamado desde RUTPFAIFS ya que le envia a ejecutar el comando CPYTOIMPF de acuerdo a las necesidades de cada uno.
 
 Para su funcionamiento es trasladar el codigo y compilarlo en su as400-iseries.
+
+## Ejecución de Rutina
+- **Llamando a la rutina (CALL RUTPFAIFSP)**
+- ![CALL RUTPFAIFSP](https://github.com/Georgesala93/Rut-As400-iseries/blob/main/Rutinas/De%20PF%20a%20csv_txt%20en%20IFS/Multimedia/CALL%20RUTPFAIFSP.gif)
+- **Verificamos el archivo generado**
+- ![Archivo IFS](https://github.com/Georgesala93/Rut-As400-iseries/blob/main/Rutinas/De%20PF%20a%20csv_txt%20en%20IFS/Multimedia/Archivo%20en%20ifs.gif)
