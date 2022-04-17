@@ -52,7 +52,7 @@
       *----------------------------------------------------------------
        LINKAGE SECTION.
       *----------------------------------------------------------------
-       01 LK-USER       PIC S9(003).
+       01 LK-USER       PIC X(010).
       *
       *----------------------------------------------------------------
        PROCEDURE DIVISION USING LK-USER
@@ -115,7 +115,7 @@
 
            EXEC SQL
                EXECUTE IMMEDIATE :W-EXECSQL
-           END-EXEC.
+           END-EXEC
            .
       *----------------------------------------------------------------
        SOLICITA-INF.
@@ -159,6 +159,19 @@
                DISPLAY "EL ARCHIVO SE GENERO EN LA RUTA: " W-RUTA-IFS
            END-IF
            CONTINUE
+           .
+      *----------------------------------------------------------------
+       ELIMINA-VISTA.
+      *----------------------------------------------------------------
+           MOVE SPACES              TO W-EXECSQL
+           STRING
+               "DROP VIEW " FUNCTION TRIM(W-VISTA)
+               DELIMITED BY SIZE INTO W-EXECSQL
+           END-STRING
+
+           EXEC SQL
+               EXECUTE IMMEDIATE :W-EXECSQL
+           END-EXEC
            .
       *----------------------------------------------------------------
       * Procedimiento : Finalizar.                                    |
