@@ -1,0 +1,182 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. RUTPFAIFS.
+       AUTHOR. JORGE SALAMANCA.
+       DATE-WRITTEN. 17/03/2021.
+      *----------------------------------------------------------------
+      * Aplicacion:                                                   |
+      * Funcion   :                                                   |
+      * Archivos Entrada/Salida:                                      |
+      *----------------------------------------------------------------
+       ENVIRONMENT DIVISION.
+       CONFIGURATION SECTION.
+       INPUT-OUTPUT SECTION.
+      *----------------------------------------------------------------
+      *               Declaracion de Archivos                         |
+      *----------------------------------------------------------------
+       FILE-CONTROL.
+      *----------------------------------------------------------------
+      * N/A -----------------------------------------------------------
+      *
+      *
+       DATA DIVISION.
+      *
+      *----------------------------------------------------------------
+      *          Declaración de Definiciones de Archivo               |
+      *----------------------------------------------------------------
+       FILE SECTION.
+      *----------------------------------------------------------------
+      * N/A -----------------------------------------------------------
+      *
+      *----------------------------------------------------------------
+      *            Declaracion de Variables de Trabajo                |
+      *----------------------------------------------------------------
+       WORKING-STORAGE SECTION.
+      *
+           EXEC SQL
+             INCLUDE SQLCA
+           END-EXEC.
+      *
+       01 W-ALFA                          PIC  X(100)    VALUE SPACES.
+       01 W-NUMER                         PIC  9(017)    VALUE ZEROES.
+       01 W-DECIMAL                       PIC  9(015)V99 VALUE ZEROES.
+      *
+      *----------------------------------------------------------------
+      *                        Data Access
+      *----------------------------------------------------------------
+      *01  xxxxxxxx-REC.
+      *    COPY DDS-REGxxxxxx  OF xxxxxxxx.
+      *----------------------------------------------------------------
+       LINKAGE SECTION.
+      *----------------------------------------------------------------
+       01 LK-xxxxxx       PIC S9(003).
+       01 LK-xxxxx        PIC S9(017).
+       01 LK-xxxx         PIC S9(001).
+       01 LK-xxx          PIC  X(100).
+      *
+      *----------------------------------------------------------------
+       PROCEDURE DIVISION USING LK-xxxxxx
+                                LK-xxxxx
+                                LK-xxxx
+                                LK-xxx
+                                .
+      *----------------------------------------------------------------
+       INICIAR-PROGRAMA.
+      *----------------------------------------------------------------
+           EXEC SQL
+             SET OPTION COMMIT = *NONE
+           END-EXEC
+           PERFORM INICIALIZAR
+           PERFORM PROCESAR
+           PERFORM FINALIZAR.
+      *----------------------------------------------------------------
+       FINALIZAR-PROGRAMA.
+      *----------------------------------------------------------------
+           GOBACK.
+      *
+      *----------------------------------------------------------------
+      * Procedimiento : Inicializar.                                  |
+      * Descripción   : En este procedimiento se inicializan las      |
+      *                 variables principales y se abren los archivos |
+      *                 a ser utilizados.                             |
+      *----------------------------------------------------------------
+       INICIALIZAR.
+      *----------------------------------------------------------------
+           CONTINUE
+           .
+      *----------------------------------------------------------------
+      * Procedimiento : PROCESAR.                                     |
+      * Descripción   : Se inicia la logica del PGM                   |
+      *----------------------------------------------------------------
+       PROCESAR.
+      *----------------------------------------------------------------
+           PERFORM READ-TABLA
+           PERFORM CURSOR-SQL
+           CONTINUE
+           .
+      *----------------------------------------------------------------
+       READ-TABLA.
+      *----------------------------------------------------------------
+           EXEC SQL
+             SELECT CAMPO1
+               INTO :SQL-CAMPO1
+               FROM TABLA
+              WHERE CAMPO4 = :SQL-CAMPO04
+           END-EXEC
+           .
+      *----------------------------------------------------------------
+       CURSOR-SQL.
+      *----------------------------------------------------------------
+           PERFORM DECLARE-CURSOR
+           PERFORM OPEN-CURSOR
+           PERFORM READ-CURSOR
+           PERFORM UNTIL ( SQLCODE NOT EQUAL ZEROES )
+      *      LOGICA DE NEGOCIO
+             PERFORM READ-CURSOR
+           END-PERFORM
+           PERFORM CLOSE-CURSOR
+           .
+      *----------------------------------------------------------------
+       DECLARE-CURSOR.
+      *----------------------------------------------------------------
+      *----ESTATICO
+           EXEC SQL
+                DECLARE CURONE SCROLL CURSOR FOR
+                 SELECT CAMPO1, CAMPO2, CAMPO3
+                  FROM TABLA
+                   GROUP BY CODPRO
+                   ORDER BY CODPRO
+           END-EXEC
+      *----DINAMICO
+           PERFORM CREATE-SQL-STM
+           EXEC SQL
+             PREPARE STM1 FROM :W-STRSQL
+           END-EXEC
+           EXEC SQL
+             DECLARE CURONE CURSOR FOR STM1
+           END-EXEC
+           .
+      *----------------------------------------------------------------
+       CREATE-SQL-STM.
+      *----------------------------------------------------------------
+           INITIALIZE  W-STRSQL W-WHESQL W-ORDSQL
+
+           STRING
+             "SELECT * FROM "
+             FUNCTION TRIM(W-NOMLIB)
+             "/"
+             FUNCTION TRIM(W-NOMARC)
+             DELIMITED BY SIZE INTO W-STRSQL
+           END-STRING
+           .
+      *----------------------------------------------------------------
+       OPEN-CURSOR.
+      *----------------------------------------------------------------
+           EXEC SQL
+             OPEN CURONE
+           END-EXEC
+           CONTINUE.
+      *----------------------------------------------------------------
+       READ-CURSOR.
+      *----------------------------------------------------------------
+           INITIALIZE W-REGISTRO
+
+           EXEC SQL
+             FETCH NEXT FROM CURONE INTO :W-REGISTRO
+           END-EXEC
+           CONTINUE.
+      *----------------------------------------------------------------
+       CLOSE-CURSOR.
+      *----------------------------------------------------------------
+           EXEC SQL
+             CLOSE CURONE
+           END-EXEC
+           CONTINUE.
+      *----------------------------------------------------------------
+      * Procedimiento : Finalizar.                                    |
+      * Descripción   : Se cierran los archivos utilizados.           |
+      *----------------------------------------------------------------
+       FINALIZAR.
+      *----------------------------------------------------------------
+      *    CLOSE xxxxxxxxx
+           CONTINUE
+           .
