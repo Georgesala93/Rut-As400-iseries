@@ -1,0 +1,55 @@
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. EXAMPLE3.
+       
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       EXEC SQL INCLUDE SQLCA END-EXEC.
+       
+       LINKAGE SECTION.
+       01 LK-INPUT.
+       05 LK-ACCION         PIC X(1).
+       05 LK-CONSECUTIVO    PIC 9(9).
+       05 LK-NOMBRE-PROGRAMA PIC X(50).
+       05 LK-INDICADOR      PIC X(1).
+       
+       01 LK-OUTPUT.
+       05 OUT-NOMBRE-PROGRAMA PIC X(50).
+       05 OUT-INDICADOR       PIC X(1).
+       
+       PROCEDURE DIVISION USING LK-INPUT LK-OUTPUT.
+       
+       MAIN-PARA.
+           EVALUATE LK-ACCION
+           WHEN 'I'
+                   PERFORM UPDATE-VALFINPGM
+           WHEN 'V'
+                   PERFORM QUERY-VALFINPGM
+           WHEN OTHER
+                   DISPLAY 'ACCION INVALIDA'
+           END-EVALUATE
+           GOBACK.
+       
+       UPDATE-VALFINPGM.
+           EXEC SQL
+           UPDATE VALFINPGM
+           SET INDICADOR = 'N'
+           WHERE CONSECUTIVO <> 'F'
+           END-EXEC.
+           IF SQLCODE = 0
+           DISPLAY 'UPDATE SUCCESSFUL'
+           ELSE
+           DISPLAY 'UPDATE FAILED'
+           END-IF.
+       
+       QUERY-VALFINPGM.
+           EXEC SQL
+           SELECT NOMBRE_PROGRAMA, INDICADOR
+           INTO :OUT-NOMBRE-PROGRAMA, :OUT-INDICADOR
+           FROM VALFINPGM
+           WHERE CONSECUTIVO = :LK-CONSECUTIVO
+           END-EXEC.
+           IF SQLCODE = 0
+           DISPLAY 'QUERY SUCCESSFUL'
+           ELSE
+           DISPLAY 'QUERY FAILED'
+           END-IF.
